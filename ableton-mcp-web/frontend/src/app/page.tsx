@@ -2,6 +2,7 @@
 
 import { useState, useEffect, ChangeEvent } from 'react';
 import styles from '../styles/Home.module.css';
+import { ModeToggle } from '@/components/color-mode-toggle';
 
 export default function Home() {
   const [socket, setSocket] = useState<WebSocket | null>(null);
