@@ -30,3 +30,7 @@ packages = ["MCP_Server"]
 [project.urls]
 "Homepage" = "https://github.com/ahujasid/ableton-mcp"
 "Bug Tracker" = "https://github.com/ahujasid/ableton-mcp/issues"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+websockets = "^11.0.3"

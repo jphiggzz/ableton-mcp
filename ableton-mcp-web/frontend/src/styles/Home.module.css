@@ -100,4 +100,31 @@
 
 .button:hover:not(:disabled) {
   background-color: var(--button-hover);
+}
+
+.transport {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  justify-content: center;
+}
+
+.transportButton {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  background-color: #0070f3;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.transportButton:hover:not(:disabled) {
+  background-color: #0051a2;
+}
+
+.transportButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 } 

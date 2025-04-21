@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
+from ableton.commands import command_handler
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create FastAPI app
 app = FastAPI(title="AbletonMCP Web Server")
@@ -21,17 +25,28 @@ socket_app = socketio.ASGIApp(sio, app)
 # Socket.IO event handlers
 @sio.event
 async def connect(sid, environ):
-    print(f"Client connected: {sid}")
+    logger.info(f"Client connected: {sid}")
 
 @sio.event
 async def disconnect(sid):
-    print(f"Client disconnected: {sid}")
+    logger.info(f"Client disconnected: {sid}")
 
 @sio.event
 async def command(sid, data):
-    print(f"Received command from {sid}: {data}")
-    # TODO: Implement command handling
-    return {"status": "received", "data": data}
+    """Handle incoming commands from clients"""
+    try:
+        logger.info(f"Received command from {sid}: {data}")
+        command_type = data.get("type")
+        params = data.get("params", {})
+        
+        if not command_type:
+            return {"status": "error", "message": "No command type specified"}
+            
+        response = await command_handler.execute(command_type, params)
+        return response
+    except Exception as e:
+        logger.error(f"Error processing command: {str(e)}")
+        return {"status": "error", "message": str(e)}
 
 # Health check endpoint
 @app.get("/health")

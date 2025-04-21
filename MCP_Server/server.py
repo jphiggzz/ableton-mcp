@@ -6,6 +6,7 @@ import logging
 from dataclasses import dataclass
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Dict, Any, List, Union
+from .websocket_server import WebSocketServer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
@@ -164,8 +165,21 @@ class AbletonConnection:
 @asynccontextmanager
 async def server_lifespan(server: FastMCP) -> AsyncIterator[Dict[str, Any]]:
     """Manage server startup and shutdown lifecycle"""
+    ws_server = None
+    ableton = None
+    
     try:
         logger.info("AbletonMCP server starting up")
+        
+        # Initialize WebSocket server
+        try:
+            ws_server = WebSocketServer()
+            if not await ws_server.start():
+                raise Exception("Failed to start WebSocket server")
+            logger.info("WebSocket server started successfully")
+        except Exception as e:
+            logger.error(f"Error starting WebSocket server: {str(e)}")
+            raise
         
         try:
             ableton = get_ableton_connection()
@@ -174,13 +188,26 @@ async def server_lifespan(server: FastMCP) -> AsyncIterator[Dict[str, Any]]:
             logger.warning(f"Could not connect to Ableton on startup: {str(e)}")
             logger.warning("Make sure the Ableton Remote Script is running")
         
-        yield {}
+        yield {
+            "websocket_server": ws_server,
+            "ableton_connection": ableton
+        }
+    except Exception as e:
+        logger.error(f"Error during server startup: {str(e)}")
+        raise
     finally:
-        global _ableton_connection
-        if _ableton_connection:
+        if ableton:
             logger.info("Disconnecting from Ableton on shutdown")
-            _ableton_connection.disconnect()
-            _ableton_connection = None
+            ableton.disconnect()
+        
+        # Stop WebSocket server
+        if ws_server:
+            try:
+                await ws_server.stop()
+                logger.info("WebSocket server shut down")
+            except Exception as e:
+                logger.error(f"Error stopping WebSocket server: {str(e)}")
+        
         logger.info("AbletonMCP server shut down")
 
 # Create the MCP server with lifespan support
